@@ -228,6 +228,19 @@
                 display: inline-flex !important; /* Force display on mobile */
                 margin-left: auto;
             }
+            .preview-close {
+                display: inline-flex !important; /* Show on mobile */
+                margin-left: auto;
+            }
+            
+            /* Optional: Style the close button differently */
+            .preview-close {
+                background-color: #dc3545; /* Red color for close button */
+            }
+            
+            .preview-close:hover {
+                background-color: #c82333;
+            }
         }
 
         /* Add these to your existing styles */
@@ -247,6 +260,10 @@
         .preview-toggle {
             display: none;
         }
+
+        .preview-close {
+            display: none; /* Hidden by default on desktop */
+        }
     </style>
 </head>
 <body>
@@ -265,6 +282,7 @@
             <div class="toolbar">
                 <button onclick="exportToPDF()">Export to PDF</button>
                 <button onclick="exportToDocx()">Export to DOCX</button>
+                <button onclick="togglePreview()" class="preview-close">Close</button>
             </div>
             <div id="preview"></div>
         </div>

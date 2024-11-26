@@ -513,63 +513,158 @@
 
         // Load sample text
         function loadSampleText() {
-            const sampleText = `# Welcome to Markdown Viewer
+    const sampleText = `# Markdown Viewer & Editor
 
-## Features
-- Real-time preview
-- Export to PDF
-- Export to DOCX
-- Mermaid diagram support
-- Responsive design
+## 🎯 Features Overview
+- ✨ Real-time preview
+- 📱 Responsive design
+- 💾 Auto-save functionality
+- 📤 Export to PDF/DOCX
+- 📊 Mermaid diagram support
+- ✍️ Floating toolbar for formatting
 
-### Mermaid Diagram Example
+## 📝 Basic Formatting
 
-\`\`\`mermaid
-graph TD
-    A[Start] --> B{Is it?}
-    B -- Yes --> C[OK]
-    C --> D[Rethink]
-    D --> B
-    B -- No ----> E[End]
-\`\`\`
+You can make text **bold**, *italic*, or ***both***. 
+You can also use ~~strikethrough~~ for deleted text.
 
-### Sequence Diagram Example
+### 🔗 Links and References
+Here's a [link to Google](https://google.com)
+> You can also create blockquotes like this one.
+> Multiple lines work too.
 
-\`\`\`mermaid
-sequenceDiagram
-    participant Alice
-    participant Bob
-    Alice->>John: Hello John, how are you?
-    loop Healthcheck
-        John->>John: Fight against hypochondria
-    end
-    Note right of John: Rational thoughts <br/>prevail!
-    John-->>Alice: Great!
-    John->>Bob: How about you?
-    Bob-->>John: Jolly good!
-\`\`\`
+### 📋 Lists
 
-### Code Example
-\`\`\`javascript
-function hello() {
-    console.log("Hello, Markdown!");
-}
-\`\`\`
-
-#### Lists
+Ordered list:
 1. First item
 2. Second item
+   - Nested unordered item
+   - Another nested item
 3. Third item
 
-* Unordered list
-* Another item
-* And another one
+Unordered list:
+- 🍎 Apple
+- 🍌 Banana
+- 🍊 Orange
+  1. Nested ordered item
+  2. Another nested item
 
-> This is a blockquote
+### 💻 Code Examples
+
+Inline code: \`const greeting = "Hello, World!";\`
+
+Code block with syntax highlighting:
+\`\`\`javascript
+// Function to greet user
+function greetUser(name) {
+    return \`Hello, \${name}! 👋\`;
+}
+
+// Object example
+const user = {
+    name: 'John Doe',
+    age: 30,
+    isAdmin: true
+};
+
+// Array methods
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);
+console.log(doubled); // [2, 4, 6, 8, 10]
+\`\`\`
+
+### 📊 Mermaid Diagrams
+
+Flow Chart:
+\`\`\`mermaid
+graph TD
+    A[Start] --> B{Is it working?}
+    B -- Yes --> C[Great!]
+    B -- No --> D[Debug]
+    D --> B
+    C --> E[Continue]
+    E --> F[End]
+\`\`\`
+
+Sequence Diagram:
+\`\`\`mermaid
+sequenceDiagram
+    participant User
+    participant Client
+    participant Server
+    participant Database
+
+    User->>Client: Enter Data
+    Client->>Server: API Request
+    Server->>Database: Query
+    Database-->>Server: Results
+    Server-->>Client: Response
+    Client-->>User: Display Results
+\`\`\`
+
+Class Diagram:
+\`\`\`mermaid
+classDiagram
+    class User {
+        +String name
+        +String email
+        +validate()
+        +save()
+    }
+    class Admin {
+        +Array permissions
+        +grantAccess()
+    }
+    class Guest {
+        +Date visitTime
+    }
+    User <|-- Admin
+    User <|-- Guest
+\`\`\`
+
+### 📊 Tables
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| Markdown | Basic syntax support | ✅ |
+| Code Highlight | Multiple language support | ✅ |
+| Mermaid | Diagram rendering | ✅ |
+| Auto-save | Local storage based | ✅ |
+| Export | PDF and DOCX support | ✅ |
+
+### 🎯 Task Lists
+
+- [x] Add basic markdown support
+- [x] Implement code highlighting
+- [x] Add Mermaid diagram support
+- [x] Create floating toolbar
+- [ ] Add more export options
+- [ ] Implement cloud sync
+
+### 📝 Mathematical Expressions
+
+When \`a ≠ 0\`, there are two solutions to \`ax² + bx + c = 0\`:
+
+\`\`\`
+x = (-b ± √(b² - 4ac)) / (2a)
+\`\`\`
+
+### 🎨 Custom HTML Support
+
+<div style="padding: 1rem; background: #f0f0f0; border-radius: 4px; text-align: center;">
+    <h3>Custom HTML Box</h3>
+    <p>You can also use custom HTML when needed!</p>
+</div>
+
+---
+
+> 💡 **Pro Tip**: Use the floating toolbar for quick formatting options while editing!
 `;
-            document.getElementById('markdown-input').value = sampleText;
-            updatePreview();
-        }
+
+    document.getElementById('markdown-input').value = sampleText;
+    updatePreview();
+    autoSaveContent();
+}
 
         // Clear text
         function clearText() {

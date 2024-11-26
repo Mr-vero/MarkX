@@ -264,6 +264,86 @@
         .preview-close {
             display: none; /* Hidden by default on desktop */
         }
+
+        /* Add to your existing styles */
+        .markdown-tools {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0 0.5rem;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+        }
+
+        .markdown-tools button {
+            padding: 0.25rem 0.5rem;
+            min-width: 32px;
+            font-size: 0.875rem;
+        }
+
+        /* Optional: Add tooltip styles */
+        [title] {
+            position: relative;
+        }
+
+        [title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.25rem 0.5rem;
+            background: #24292e;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        .floating-toolbar {
+            position: absolute;
+            display: none;
+            background: var(--toolbar-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            gap: 2px;
+        }
+
+        .floating-toolbar.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .floating-toolbar button {
+            padding: 6px;
+            min-width: 32px;
+            height: 32px;
+            font-size: 14px;
+            background: transparent;
+            color: var(--button-bg);
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-toolbar button:hover {
+            background: #f0f2f4;
+            transform: none;
+        }
+
+        /* Update tooltip style for floating toolbar */
+        .floating-toolbar [title]:hover::after {
+            bottom: auto;
+            top: -30px;
+        }
     </style>
 </head>
 <body>
@@ -272,6 +352,17 @@
             <div class="toolbar">
                 <button onclick="loadSampleText()">Load Sample</button>
                 <button onclick="clearText()">Clear</button>
+                <div class="floating-toolbar" id="floating-toolbar">
+                    <button onclick="insertMarkdown('bold')" title="Bold"><strong>B</strong></button>
+                    <button onclick="insertMarkdown('italic')" title="Italic"><em>I</em></button>
+                    <button onclick="insertMarkdown('heading')" title="Heading">#</button>
+                    <button onclick="insertMarkdown('link')" title="Link">🔗</button>
+                    <button onclick="insertMarkdown('code')" title="Code">{'}'}</button>
+                    <button onclick="insertMarkdown('list')" title="List">•</button>
+                    <button onclick="insertMarkdown('quote')" title="Quote">❝</button>
+                    <button onclick="insertMarkdown('table')" title="Table">▦</button>
+                    <button onclick="insertMarkdown('mermaid')" title="Mermaid">📊</button>
+                </div>
                 <button onclick="togglePreview()" class="preview-toggle">Preview</button>
             </div>
             <textarea id="markdown-input" placeholder="Enter your Markdown here..." 
@@ -505,6 +596,11 @@ function hello() {
             }, 150));
         });
 
+        function autoSaveContent() {
+            const content = document.getElementById('markdown-input').value;
+            localStorage.setItem('markdown-content', content);
+        }
+
         function togglePreview() {
             const previewSection = document.querySelector('.preview-section');
             previewSection.classList.toggle('active');
@@ -525,6 +621,134 @@ function hello() {
         }
 
         loadSavedContent(); // Load saved content when page loads
+
+        // Update the textarea event listeners
+        document.getElementById('markdown-input').addEventListener('mouseup', function(e) {
+            const textarea = this;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            
+            if (start !== end) {  // If there's a selection
+                const textareaRect = textarea.getBoundingClientRect();
+                // Calculate position based on textarea's position
+                const x = e.clientX - textareaRect.left;
+                const y = e.clientY - textareaRect.top;
+                showFloatingToolbar(e.pageX, e.pageY - 50); // Position toolbar above cursor
+            }
+        });
+
+        // Also handle keyboard selection
+        document.getElementById('markdown-input').addEventListener('keyup', function(e) {
+            // Only show toolbar for specific keys that might result in selection
+            if (e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || 
+                e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                
+                if (start !== end) {
+                    const textareaRect = this.getBoundingClientRect();
+                    // Position near the end of selection
+                    const lines = this.value.substr(0, end).split('\n');
+                    const lastLine = lines[lines.length - 1];
+                    const lineHeight = parseInt(window.getComputedStyle(this).lineHeight);
+                    
+                    showFloatingToolbar(
+                        textareaRect.left + Math.min(lastLine.length * 8, textareaRect.width / 2),
+                        textareaRect.top + (lines.length - 1) * lineHeight
+                    );
+                }
+            }
+        });
+
+        // Update showFloatingToolbar function
+        function showFloatingToolbar(x, y) {
+            const toolbar = document.getElementById('floating-toolbar');
+            const toolbarWidth = 300; // Approximate width of toolbar
+            
+            // Ensure toolbar stays within viewport
+            const viewportWidth = window.innerWidth;
+            const adjustedX = Math.min(Math.max(0, x - toolbarWidth/2), viewportWidth - toolbarWidth);
+            
+            toolbar.style.left = `${adjustedX}px`;
+            toolbar.style.top = `${y}px`;
+            toolbar.classList.add('active');
+        }
+
+        // Update hideFloatingToolbar function
+        function hideFloatingToolbar() {
+            const toolbar = document.getElementById('floating-toolbar');
+            toolbar.classList.remove('active');
+        }
+
+        // Update click handler to prevent immediate hiding when clicking toolbar buttons
+        document.addEventListener('click', function(e) {
+            const toolbar = document.getElementById('floating-toolbar');
+            const textarea = document.getElementById('markdown-input');
+            
+            if (!toolbar.contains(e.target) && !textarea.contains(e.target)) {
+                hideFloatingToolbar();
+            }
+        });
+
+        // Update insertMarkdown function
+        function insertMarkdown(type) {
+            const textarea = document.getElementById('markdown-input');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selection = text.substring(start, end);
+            let insertion = '';
+
+            switch(type) {
+                case 'bold':
+                    insertion = selection ? `**${selection}**` : '**bold text**';
+                    break;
+                case 'italic':
+                    insertion = selection ? `*${selection}*` : '*italic text*';
+                    break;
+                case 'heading':
+                    insertion = selection ? `# ${selection}` : '# Heading';
+                    break;
+                case 'link':
+                    insertion = selection ? `[${selection}](url)` : '[link text](url)';
+                    break;
+                case 'code':
+                    insertion = selection ? `\`${selection}\`` : '`code`';
+                    break;
+                case 'list':
+                    insertion = '\n- List item\n- List item\n- List item';
+                    break;
+                case 'quote':
+                    insertion = selection ? `> ${selection}` : '> Quote';
+                    break;
+                case 'table':
+                    insertion = '\n| Header | Header |\n|--------|--------|\n| Cell   | Cell   |';
+                    break;
+                case 'mermaid':
+                    insertion = '\n```mermaid\ngraph TD\n    A[Start] --> B[End]\n```\n';
+                    break;
+            }
+
+            // Insert the markdown
+            textarea.value = text.substring(0, start) + insertion + text.substring(end);
+            
+            // Update preview and save
+            autoSaveContent();
+            updatePreview();
+
+            // Set cursor position
+            const newCursorPos = start + insertion.length;
+            textarea.focus();
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            
+            // Hide toolbar after insertion
+            hideFloatingToolbar();
+        }
+
+        // Prevent toolbar buttons from losing focus
+        document.getElementById('floating-toolbar').addEventListener('mousedown', function(e) {
+            e.preventDefault();
+        });
     </script>
 </body>
 </html>

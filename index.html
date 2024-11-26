@@ -368,6 +368,9 @@
             const preview = document.getElementById('preview');
             preview.innerHTML = marked.parse(input);
             
+            // Auto-save content to localStorage
+            localStorage.setItem('markdown-content', input);
+            
             // Apply syntax highlighting to code blocks
             preview.querySelectorAll('pre code').forEach((block) => {
                 if (!block.parentElement.previousElementSibling?.classList.contains('mermaid')) {
@@ -480,11 +483,27 @@ function hello() {
         // Clear text
         function clearText() {
             document.getElementById('markdown-input').value = '';
+            localStorage.removeItem('markdown-content');
             updatePreview();
         }
 
-        // Initial preview update
-        updatePreview();
+        // Update the initialization code
+        document.addEventListener('DOMContentLoaded', function() {
+            const markdownInput = document.getElementById('markdown-input');
+            
+            // Load saved content if it exists
+            const savedContent = localStorage.getItem('markdown-content');
+            if (savedContent) {
+                markdownInput.value = savedContent;
+                updatePreview();
+            }
+            
+            // Set up auto-save on input
+            markdownInput.addEventListener('input', debounce(() => {
+                autoSaveContent();
+                updatePreview();
+            }, 150));
+        });
 
         function togglePreview() {
             const previewSection = document.querySelector('.preview-section');
@@ -495,6 +514,17 @@ function hello() {
                 updatePreview();
             }
         }
+
+        // Add this new function to load saved content
+        function loadSavedContent() {
+            const savedContent = localStorage.getItem('markdown-content');
+            if (savedContent) {
+                document.getElementById('markdown-input').value = savedContent;
+                updatePreview();
+            }
+        }
+
+        loadSavedContent(); // Load saved content when page loads
     </script>
 </body>
 </html>

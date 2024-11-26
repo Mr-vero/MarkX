@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Viewer & Exporter</title>
+    
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    <!-- html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- Add GitHub-style code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    
+    <style>
+        :root {
+            --border-color: #e1e4e8;
+            --button-bg: #24292e;
+            --button-hover: #2c3238;
+            --toolbar-bg: #ffffff;
+            --preview-bg: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: #24292f;
+            background-color: #f6f8fa;
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            padding: 2rem;
+            gap: 2rem;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .editor-section, .preview-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: var(--preview-bg);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--toolbar-bg);
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: var(--button-hover);
+            transform: translateY(-1px);
+        }
+
+        #markdown-input {
+            flex: 1;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            resize: none;
+            font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #24292f;
+            background: transparent;
+        }
+
+        #markdown-input:focus {
+            outline: none;
+        }
+
+        #preview {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            font-size: 16px;
+            color: #24292f;
+        }
+
+        /* GitHub-style Markdown */
+        #preview h1 {
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--border-color);
+            margin: 1em 0 16px;
+            font-weight: 600;
+            font-size: 2em;
+        }
+
+        #preview h2 {
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--border-color);
+            margin: 1.5em 0 16px;
+            font-weight: 600;
+            font-size: 1.5em;
+        }
+
+        #preview h3, #preview h4, #preview h5, #preview h6 {
+            margin: 1em 0 16px;
+            font-weight: 600;
+        }
+
+        #preview p {
+            margin-bottom: 16px;
+        }
+
+        #preview code {
+            background-color: rgba(175,184,193,0.2);
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+            font-size: 85%;
+        }
+
+        #preview pre {
+            background-color: #f6f8fa;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        #preview pre code {
+            background: none;
+            padding: 0;
+            font-size: 85%;
+            white-space: pre;
+        }
+
+        #preview blockquote {
+            padding: 0 1em;
+            color: #57606a;
+            border-left: 0.25em solid #d0d7de;
+            margin: 0 0 16px;
+        }
+
+        #preview ul, #preview ol {
+            padding-left: 2em;
+            margin-bottom: 16px;
+        }
+
+        #preview img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        #preview table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+
+        #preview table th, #preview table td {
+            padding: 6px 13px;
+            border: 1px solid var(--border-color);
+        }
+
+        #preview table tr:nth-child(2n) {
+            background-color: #f6f8fa;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+                padding: 1rem;
+            }
+
+            .editor-section, .preview-section {
+                min-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="editor-section">
+            <div class="toolbar">
+                <button onclick="loadSampleText()">Load Sample</button>
+                <button onclick="clearText()">Clear</button>
+            </div>
+            <textarea id="markdown-input" placeholder="Enter your Markdown here..." 
+                      oninput="debounce(updatePreview, 150)()"></textarea>
+        </div>
+        
+        <div class="preview-section">
+            <div class="toolbar">
+                <button onclick="exportToPDF()">Export to PDF</button>
+                <button onclick="exportToDocx()">Export to DOCX</button>
+            </div>
+            <div id="preview"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize marked with options for better performance
+        marked.setOptions({
+            headerIds: true,
+            gfm: true,
+            breaks: true,
+            sanitize: false,
+            smartLists: true,
+            smartypants: true,
+            xhtml: false
+        });
+
+        // Initialize marked with GitHub-like settings
+        marked.setOptions({
+            headerIds: true,
+            gfm: true,
+            breaks: true,
+            sanitize: false,
+            smartLists: true,
+            smartypants: true,
+            xhtml: false,
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    try {
+                        return hljs.highlight(code, { language: lang }).value;
+                    } catch (err) {}
+                }
+                return code;
+            }
+        });
+
+        // Debounce function to limit preview updates
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Update preview with markdown content
+        function updatePreview() {
+            const input = document.getElementById('markdown-input').value;
+            const preview = document.getElementById('preview');
+            preview.innerHTML = marked.parse(input);
+            // Apply syntax highlighting to code blocks
+            preview.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
+
+        // Export to PDF
+        async function exportToPDF() {
+            const element = document.getElementById('preview');
+            const opt = {
+                margin: [10, 10],
+                filename: 'markdown-export.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            try {
+                await html2pdf().set(opt).from(element).save();
+            } catch (error) {
+                alert('Error exporting to PDF: ' + error.message);
+            }
+        }
+
+        // Export to DOCX (simplified HTML to text conversion)
+        function exportToDocx() {
+            const content = document.getElementById('preview').innerHTML;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'markdown-export.docx';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // Load sample text
+        function loadSampleText() {
+            const sampleText = `# Welcome to Markdown Viewer
+
+## Features
+- Real-time preview
+- Export to PDF
+- Export to DOCX
+- Responsive design
+
+### Code Example
+\`\`\`javascript
+function hello() {
+    console.log("Hello, Markdown!");
+}
+\`\`\`
+
+#### Lists
+1. First item
+2. Second item
+3. Third item
+
+* Unordered list
+* Another item
+* And another one
+
+> This is a blockquote
+`;
+            document.getElementById('markdown-input').value = sampleText;
+            updatePreview();
+        }
+
+        // Clear text
+        function clearText() {
+            document.getElementById('markdown-input').value = '';
+            updatePreview();
+        }
+
+        // Initial preview update
+        updatePreview();
+    </script>
+</body>
+</html>
